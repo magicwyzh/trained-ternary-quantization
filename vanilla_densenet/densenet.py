@@ -58,9 +58,9 @@ class DenseNet(nn.Module):
         final_drop_rate (float) - dropout rate before final fc layer
         num_classes (int) - number of classification classes
     """
-    def __init__(self, growth_rate=24, block_config=(4, 4, 4, 4),
-                 num_init_features=32, bn_size=4, drop_rate=0.2,
-                 final_drop_rate=0.2, num_classes=200):
+    def __init__(self, growth_rate=24, block_config=(6, 6, 6, 6),
+                 num_init_features=64, bn_size=4, drop_rate=0.2,
+                 final_drop_rate=0.1, num_classes=200):
 
         super(DenseNet, self).__init__()
 
@@ -99,7 +99,7 @@ class DenseNet(nn.Module):
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=False)
-        out = F.avg_pool2d(out, kernel_size=9).view(features.size(0), -1)
+        out = F.avg_pool2d(out, kernel_size=2).view(features.size(0), -1)
         out = self.dropout(out)
         out = self.classifier(out)
         return out
