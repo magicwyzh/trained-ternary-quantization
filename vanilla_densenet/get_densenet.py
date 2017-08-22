@@ -26,7 +26,7 @@ def get_model():
         p for n, p in model.named_parameters()
         if 'norm' in n and 'bias' in n
     ]
-    
+
     # parameter initialization
     for p in weights:
         kaiming_uniform(p)
