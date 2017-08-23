@@ -16,10 +16,10 @@ def get_folders():
     }
 
     factors = {
-        0: lambda: np.random.normal(1.0, 0.3),
-        1: lambda: np.random.normal(1.0, 0.1),
-        2: lambda: np.random.normal(1.0, 0.1),
-        3: lambda: np.random.normal(1.0, 0.3),
+        0: lambda: np.clip(np.random.normal(1.0, 0.4), 0.2, 1.8),
+        1: lambda: np.clip(np.random.normal(1.0, 0.2), 0.6, 1.4),
+        2: lambda: np.clip(np.random.normal(1.0, 0.2), 0.6, 1.4),
+        3: lambda: np.clip(np.random.normal(1.0, 0.4), 0.2, 1.8),
     }
     
     # random enhancers in random order
@@ -31,8 +31,9 @@ def get_folders():
             image = enhancers[i](image, f)
         return image
     
-    # train data augmentation on the fly
+    # training data augmentation on the fly
     train_transform = transforms.Compose([
+        transforms.RandomCrop(56),
         transforms.RandomHorizontalFlip(),
         transforms.Lambda(enhance),
         transforms.ToTensor(),
@@ -44,6 +45,7 @@ def get_folders():
     
     # for validation data
     val_transform = transforms.Compose([
+        transforms.CenterCrop(56),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],

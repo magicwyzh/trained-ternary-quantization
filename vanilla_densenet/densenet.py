@@ -58,18 +58,18 @@ class DenseNet(nn.Module):
         final_drop_rate (float) - dropout rate before final fc layer
         num_classes (int) - number of classification classes
     """
-    def __init__(self, growth_rate=24, block_config=(6, 6, 6, 6),
+    def __init__(self, growth_rate=24, block_config=(6, 12, 24, 16),
                  num_init_features=64, bn_size=4, drop_rate=0.2,
-                 final_drop_rate=0.1, num_classes=200):
+                 final_drop_rate=0.2, num_classes=200):
 
         super(DenseNet, self).__init__()
 
         # First convolution
         self.features = nn.Sequential(OrderedDict([
-            ('conv0', nn.Conv2d(3, num_init_features, kernel_size=7, stride=2, padding=3, bias=False)),
+            ('conv0', nn.Conv2d(3, num_init_features, kernel_size=5, stride=1, padding=2, bias=False)),
             ('norm0', nn.BatchNorm2d(num_init_features)),
             ('relu0', nn.ReLU(inplace=True)),
-            ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
+            ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
         ]))
 
         # Each denseblock
@@ -90,7 +90,7 @@ class DenseNet(nn.Module):
                 num_features = num_features // 2
 
         # Final batch norm
-        self.features.add_module('norm5', nn.BatchNorm2d(num_features))
+        self.features.add_module('norm4', nn.BatchNorm2d(num_features))
 
         # Linear layer
         self.dropout = nn.Dropout(p=final_drop_rate)
@@ -99,7 +99,7 @@ class DenseNet(nn.Module):
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=False)
-        out = F.avg_pool2d(out, kernel_size=2).view(features.size(0), -1)
+        out = F.avg_pool2d(out, kernel_size=7).view(features.size(0), -1)
         out = self.dropout(out)
         out = self.classifier(out)
         return out
