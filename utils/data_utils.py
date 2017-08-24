@@ -4,7 +4,7 @@ from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 
 
-def get_folders():
+def get_image_folders():
     
     data_dir = '/home/ubuntu/data/tiny-imagenet-200/'
 
@@ -16,10 +16,10 @@ def get_folders():
     }
 
     factors = {
-        0: lambda: np.clip(np.random.normal(1.0, 0.4), 0.2, 1.8),
-        1: lambda: np.clip(np.random.normal(1.0, 0.2), 0.6, 1.4),
-        2: lambda: np.clip(np.random.normal(1.0, 0.2), 0.6, 1.4),
-        3: lambda: np.clip(np.random.normal(1.0, 0.4), 0.2, 1.8),
+        0: lambda: np.clip(np.random.normal(1.0, 0.3), 0.4, 1.6),
+        1: lambda: np.clip(np.random.normal(1.0, 0.15), 0.7, 1.3),
+        2: lambda: np.clip(np.random.normal(1.0, 0.15), 0.7, 1.3),
+        3: lambda: np.clip(np.random.normal(1.0, 0.3), 0.4, 1.6),
     }
     
     # random enhancers in random order
@@ -31,8 +31,13 @@ def get_folders():
             image = enhancers[i](image, f)
         return image
     
+    def rotate(image):
+        degree = np.clip(np.random.normal(0.0, 15.0), -40.0, 40.0)
+        return image.rotate(degree, Image.BICUBIC)
+    
     # training data augmentation on the fly
     train_transform = transforms.Compose([
+        transforms.Lambda(rotate),
         transforms.RandomCrop(56),
         transforms.RandomHorizontalFlip(),
         transforms.Lambda(enhance),

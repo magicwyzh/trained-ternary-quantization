@@ -29,12 +29,12 @@ def get_model():
         constant(p, 0.0)
 
     params = [
-        {'params': weights, 'weight_decay': 1e-3},
+        {'params': weights, 'weight_decay': 1e-4},
         {'params': biases},
         {'params': bn_weights},
         {'params': bn_biases}
     ]
-    optimizer = optim.SGD(params, lr=4e-2, momentum=0.9, nesterov=True)
+    optimizer = optim.SGD(params, lr=4e-2, momentum=0.95, nesterov=True)
 
     # loss function
     criterion = nn.CrossEntropyLoss().cuda()

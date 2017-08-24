@@ -138,3 +138,49 @@ def show_errors(erroneous_samples, erroneous_predictions, erroneous_targets, dec
         axes[i].set_title(title);
     
     plt.tight_layout()
+
+
+def predict(model, val_iterator_no_shuffle, return_erroneous=False):
+
+    val_predictions = []
+    val_true_targets = []
+    
+    if return_erroneous:
+        erroneous_samples = []
+        erroneous_targets = []
+        erroneous_predictions = []
+    
+    model.eval()
+
+    for x_batch, y_batch in tqdm(val_iterator_no_shuffle):
+
+        x_batch = Variable(x_batch.cuda(), volatile=True)
+        y_batch = Variable(y_batch.cuda(), volatile=True)
+        logits = model(x_batch)
+
+        # compute probabilities
+        probs = F.softmax(logits)
+        
+        if return_erroneous:
+            _, argmax = probs.max(1)
+            hits = argmax.eq(y_batch).data
+            miss = 1 - hits
+            if miss.nonzero().numel() != 0:
+                erroneous_samples += [x_batch[miss.nonzero()[:, 0]].cpu().data.numpy()]
+                erroneous_targets += [y_batch[miss.nonzero()[:, 0]].cpu().data.numpy()]
+                erroneous_predictions += [probs[miss.nonzero()[:, 0]].cpu().data.numpy()]
+        
+        val_predictions += [probs.cpu().data.numpy()]
+        val_true_targets += [y_batch.cpu().data.numpy()]
+        
+    val_predictions = np.concatenate(val_predictions, axis=0)
+    val_true_targets = np.concatenate(val_true_targets, axis=0)
+    
+    if return_erroneous:
+        erroneous_samples = np.concatenate(erroneous_samples, axis=0)
+        erroneous_targets = np.concatenate(erroneous_targets, axis=0)
+        erroneous_predictions = np.concatenate(erroneous_predictions, axis=0)
+        return val_predictions, val_true_targets,\
+            erroneous_samples, erroneous_targets, erroneous_predictions
+    
+    return val_predictions, val_true_targets

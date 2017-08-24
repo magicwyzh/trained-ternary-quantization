@@ -1,13 +1,13 @@
 import torch.nn as nn
 import torch.optim as optim
-from torch.nn.init import constant, kaiming_normal
+from torch.nn.init import constant, kaiming_uniform
 from densenet import DenseNet
 
 
 def get_model():
 
     model = DenseNet(
-        growth_rate=24, block_config=(8, 8, 8),
+        growth_rate=32, block_config=(6, 6, 6),
         num_init_features=48, bn_size=4, drop_rate=0.25,
         final_drop_rate=0.25, num_classes=200
     )
@@ -29,7 +29,7 @@ def get_model():
 
     # parameter initialization
     for p in weights:
-        kaiming_normal(p)
+        kaiming_uniform(p)
     for p in biases:
         constant(p, 0.0)
     for p in bn_weights:
@@ -38,12 +38,12 @@ def get_model():
         constant(p, 0.0)
 
     params = [
-        {'params': weights, 'weight_decay': 1e-4},
+        {'params': weights, 'weight_decay': 2e-4},
         {'params': biases},
         {'params': bn_weights},
         {'params': bn_biases}
     ]
-    optimizer = optim.SGD(params, lr=1e-1, momentum=0.9, nesterov=True)
+    optimizer = optim.SGD(params, lr=1e-1, momentum=0.95, nesterov=True)
 
     # loss function
     criterion = nn.CrossEntropyLoss().cuda()

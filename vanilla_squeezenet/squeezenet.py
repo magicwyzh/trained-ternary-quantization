@@ -1,4 +1,3 @@
-import math
 import torch
 import torch.nn as nn
 import torch.nn.init as init
@@ -12,35 +11,33 @@ class Fire(nn.Module):
         super(Fire, self).__init__()
         self.inplanes = inplanes
         # squeeze
+        self.squeeze_bn = nn.BatchNorm2d(inplanes)
+        self.squeeze_activation = nn.ReLU(inplace=True)
         self.squeeze = nn.Conv2d(
             inplanes, squeeze_planes, kernel_size=1, bias=False
         )
-        self.squeeze_bn = nn.BatchNorm2d(squeeze_planes)
-        self.squeeze_activation = nn.ReLU(inplace=True)
         # expand
+        self.expand1x1_bn = nn.BatchNorm2d(squeeze_planes)
+        self.expand1x1_activation = nn.ReLU(inplace=True)
         self.expand1x1 = nn.Conv2d(
             squeeze_planes, expand1x1_planes, kernel_size=1, bias=False
         )
-        self.expand1x1_bn = nn.BatchNorm2d(expand1x1_planes)
-        self.expand1x1_activation = nn.ReLU(inplace=True)
         # expand
+        self.expand3x3_bn = nn.BatchNorm2d(squeeze_planes)
+        self.expand3x3_activation = nn.ReLU(inplace=True)
         self.expand3x3 = nn.Conv2d(
             squeeze_planes, expand3x3_planes, kernel_size=3, padding=1, bias=False
         )
-        self.expand3x3_bn = nn.BatchNorm2d(expand3x3_planes)
-        self.expand3x3_activation = nn.ReLU(inplace=True)
-        
         self.residual = residual
-        if residual:
+        if self.residual:
             assert (inplanes == (expand1x1_planes + expand3x3_planes))
 
     def forward(self, x):
         residual = x
-        
-        x = self.squeeze_activation(self.squeeze_bn(self.squeeze(x)))
+        x = self.squeeze(self.squeeze_activation(self.squeeze_bn(x)))
         out = torch.cat([
-            self.expand1x1_activation(self.expand1x1_bn(self.expand1x1(x))),
-            self.expand3x3_activation(self.expand3x3_bn(self.expand3x3(x)))
+            self.expand1x1(self.expand1x1_activation(self.expand1x1_bn(x))),
+            self.expand3x3(self.expand3x3_activation(self.expand3x3_bn(x)))
         ], 1)
         
         if self.residual:
@@ -84,9 +81,9 @@ class SqueezeNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 if m is final_conv:
-                    init.normal(m.weight.data, mean=0.0, std=0.01)
+                    init.normal(m.weight, mean=0.0, std=0.01)
                 else:
-                    init.kaiming_uniform(m.weight.data)
+                    init.kaiming_uniform(m.weight)
                 if m.bias is not None:
                     m.bias.data.zero_()
 
