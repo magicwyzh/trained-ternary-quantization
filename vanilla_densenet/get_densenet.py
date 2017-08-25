@@ -7,9 +7,9 @@ from densenet import DenseNet
 def get_model():
 
     model = DenseNet(
-        growth_rate=32, block_config=(6, 6, 6),
-        num_init_features=48, bn_size=4, drop_rate=0.25,
-        final_drop_rate=0.25, num_classes=200
+        growth_rate=12, block_config=(4, 4, 4),
+        num_init_features=48, bn_size=4, drop_rate=0.15,
+        final_drop_rate=0.15, num_classes=200
     )
 
     # create different parameter groups
@@ -38,12 +38,12 @@ def get_model():
         constant(p, 0.0)
 
     params = [
-        {'params': weights, 'weight_decay': 2e-4},
+        {'params': weights, 'weight_decay': 1e-4},
         {'params': biases},
         {'params': bn_weights},
         {'params': bn_biases}
     ]
-    optimizer = optim.SGD(params, lr=1e-1, momentum=0.95, nesterov=True)
+    optimizer = optim.Adam(params, lr=1e-3)#, momentum=0.95, nesterov=True)
 
     # loss function
     criterion = nn.CrossEntropyLoss().cuda()

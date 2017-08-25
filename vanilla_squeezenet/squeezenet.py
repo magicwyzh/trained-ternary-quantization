@@ -72,7 +72,7 @@ class SqueezeNet(nn.Module):
         # Final convolution is initialized differently form the rest
         final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
         self.classifier = nn.Sequential(
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.6),
             final_conv,
             nn.ReLU(inplace=True),
             nn.AvgPool2d(7)

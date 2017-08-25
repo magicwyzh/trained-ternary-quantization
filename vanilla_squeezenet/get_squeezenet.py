@@ -29,7 +29,7 @@ def get_model():
         constant(p, 0.0)
 
     params = [
-        {'params': weights, 'weight_decay': 1e-4},
+        {'params': weights, 'weight_decay': 3e-4},
         {'params': biases},
         {'params': bn_weights},
         {'params': bn_biases}
