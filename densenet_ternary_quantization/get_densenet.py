@@ -1,70 +1,60 @@
 import torch.nn as nn
 import torch.optim as optim
-from torch.nn.init import normal, constant
+from torch.nn.init import constant, kaiming_uniform
 
 import sys
-sys.path.append('../densenet/')
-from densenet import densenet121
+sys.path.append('../vanilla_densenet/')
+from densenet import DenseNet
 
 
-def get_model(class_weights=None):
+def get_model():
 
-    model = densenet121(pretrained=True, drop_rate=0, final_drop_rate=0.15)
-    # model_size: penultimate_layer_output_dim,
-    # 201: 1920, 169: 1664, 121: 1024
+    model = DenseNet(
+        growth_rate=12, block_config=(8, 12, 10),
+        num_init_features=48, bn_size=4, drop_rate=0.25,
+        final_drop_rate=0.25, num_classes=200
+    )
 
-    # make all params untrainable
-    for p in model.parameters():
-        p.requires_grad = False
-
-    # reset the last fc layer
-    model.classifier = nn.Linear(1024, 256)
-    normal(model.classifier.weight, 0.0, 0.01)
-    constant(model.classifier.bias, 0.0)
-
-    # make some other params trainable
-    trainable_params = []
-    trainable_params += [n for n, p in model.named_parameters() if 'norm5' in n]
-    trainable_params += [n for n, p in model.named_parameters() if 'denseblock' in n or 'transition' in n]
-    for n, p in model.named_parameters():
-        if n in trainable_params:
-            p.requires_grad = True
-    
-    for m in model.modules():
-        if isinstance(m, nn.ReLU):
-            m.inplace = False
-    
     # create different parameter groups
-    classifier_weights = [model.classifier.weight]
-    classifier_biases = [model.classifier.bias]
-    features_weights = [
+    weights = [
         p for n, p in model.named_parameters()
-        if n in trainable_params and 'conv' in n
+        if 'conv0' in n or 'classifier.weight' in n
     ]
-    features_bn_weights = [
+    weights_to_be_quantized = [
         p for n, p in model.named_parameters()
-        if n in trainable_params and 'norm' in n and 'weight' in n
+        if 'conv' in n and ('dense' in n or 'transition' in n)
     ]
-    features_bn_biases = [
+    biases = [model.classifier.bias]
+    bn_weights = [
         p for n, p in model.named_parameters()
-        if n in trainable_params and 'bias' in n
+        if 'norm' in n and 'weight' in n
+    ]
+    bn_biases = [
+        p for n, p in model.named_parameters()
+        if 'norm' in n and 'bias' in n
     ]
 
-    # you can set different learning rates
-    classifier_lr = 1e-3
-    features_lr = 1e-3
-    
+    # parameter initialization
+    for p in weights:
+        kaiming_uniform(p)
+    for p in biases:
+        constant(p, 0.0)
+    for p in bn_weights:
+        constant(p, 1.0)
+    for p in bn_biases:
+        constant(p, 0.0)
+
     params = [
-        {'params': classifier_weights, 'lr': classifier_lr, 'weight_decay': 1e-4},
-        {'params': classifier_biases, 'lr': classifier_lr},
-        {'params': features_weights, 'lr': features_lr},
-        {'params': features_bn_weights, 'lr': features_lr},
-        {'params': features_bn_biases, 'lr': features_lr}
+        {'params': weights, 'weight_decay': 1e-5},
+        {'params': weights_to_be_quantized},
+        {'params': biases},
+        {'params': bn_weights},
+        {'params': bn_biases}
     ]
-    optimizer = optim.SGD(params, momentum=0.9, nesterov=True)
-            
+    optimizer = optim.SGD(params, lr=1e-1, momentum=0.9, nesterov=True)
+
     # loss function
-    criterion = nn.CrossEntropyLoss(weight=class_weights).cuda()
+    criterion = nn.CrossEntropyLoss().cuda()
     # move the model to gpu
     model = model.cuda()
     return model, criterion, optimizer
