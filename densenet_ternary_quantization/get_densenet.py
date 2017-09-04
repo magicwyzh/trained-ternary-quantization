@@ -45,13 +45,13 @@ def get_model():
         constant(p, 0.0)
 
     params = [
-        {'params': weights, 'weight_decay': 1e-5},
+        {'params': weights, 'weight_decay': 1e-4},
         {'params': weights_to_be_quantized},
         {'params': biases},
         {'params': bn_weights},
         {'params': bn_biases}
     ]
-    optimizer = optim.SGD(params, lr=1e-1, momentum=0.9, nesterov=True)
+    optimizer = optim.Adam(params, lr=1e-4)
 
     # loss function
     criterion = nn.CrossEntropyLoss().cuda()
