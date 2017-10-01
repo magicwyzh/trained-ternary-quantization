@@ -36,8 +36,6 @@ def get_model():
     ]
     optimizer = optim.SGD(params, lr=4e-2, momentum=0.95, nesterov=True)
 
-    # loss function
-    criterion = nn.CrossEntropyLoss().cuda()
-    # move the model to gpu
-    model = model.cuda()
-    return model, criterion, optimizer
+    loss = nn.CrossEntropyLoss().cuda()
+    model = model.cuda()  # move the model to gpu
+    return model, loss, optimizer

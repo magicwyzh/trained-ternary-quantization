@@ -4,6 +4,10 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
+NUM_CLASSES = 200
+FINAL_DROPOUT = 0.25
+
+
 class _DenseLayer(nn.Sequential):
     def __init__(self, num_input_features, growth_rate, bn_size, drop_rate):
         super(_DenseLayer, self).__init__()
@@ -48,7 +52,7 @@ class _Transition(nn.Sequential):
 
 
 class DenseNet(nn.Module):
-    r"""Densenet-BC model class, based on
+    """Densenet-BC model class, based on
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`
 
     Args:
@@ -61,21 +65,24 @@ class DenseNet(nn.Module):
         num_classes (int) - number of classification classes.
     """
     def __init__(self, growth_rate=32, block_config=(6, 12, 24, 16),
-                 num_init_features=64, bn_size=4, drop_rate=0.2,
-                 final_drop_rate=0.2, num_classes=1000):
+                 num_init_features=64, bn_size=4, drop_rate=0,
+                 final_drop_rate=FINAL_DROPOUT, num_classes=NUM_CLASSES):
 
         super(DenseNet, self).__init__()
 
         # First convolution
         self.features = nn.Sequential(OrderedDict([
             ('conv0', nn.Conv2d(3, num_init_features,
-                                kernel_size=7, stride=2, padding=3, bias=False)),
+                                kernel_size=3, stride=1, padding=1, bias=False)),
             ('norm0', nn.BatchNorm2d(num_init_features)),
-            ('relu0', nn.ReLU(inplace=True)),
-            ('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
+            ('relu0', nn.ReLU(inplace=True))
         ]))
-        # this block is different from
-        # the original(trained on imagenet with 224x224 input)
+        # this is different from the original model, because
+        # i removed pooling layer and changed the first conv layer.
+        # in the original: kernel_size=7, stride=2, padding=3
+        
+        # i use input images with size 56,
+        # so after first layers spatial size will be also 56
 
         # Each denseblock
         num_features = num_init_features

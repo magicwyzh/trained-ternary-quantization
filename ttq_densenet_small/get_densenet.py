@@ -1,9 +1,8 @@
 import torch.nn as nn
 import torch.optim as optim
-from torch.nn.init import constant, kaiming_uniform
 
 import sys
-sys.path.append('../vanilla_densenet/')
+sys.path.append('../vanilla_densenet_small/')
 from densenet import DenseNet
 
 
@@ -14,11 +13,14 @@ def get_model():
         num_init_features=48, bn_size=4, drop_rate=0.25,
         final_drop_rate=0.25, num_classes=200
     )
-
+    
+    # set the first layer not trainable
+    model.features.conv0.weight.requires_grad = False
+    
     # create different parameter groups
     weights = [
         p for n, p in model.named_parameters()
-        if 'conv0' in n or 'classifier.weight' in n
+        if 'classifier.weight' in n
     ]
     weights_to_be_quantized = [
         p for n, p in model.named_parameters()
@@ -34,16 +36,6 @@ def get_model():
         if 'norm' in n and 'bias' in n
     ]
 
-    # parameter initialization
-    for p in weights:
-        kaiming_uniform(p)
-    for p in biases:
-        constant(p, 0.0)
-    for p in bn_weights:
-        constant(p, 1.0)
-    for p in bn_biases:
-        constant(p, 0.0)
-
     params = [
         {'params': weights, 'weight_decay': 1e-4},
         {'params': weights_to_be_quantized},
@@ -53,8 +45,6 @@ def get_model():
     ]
     optimizer = optim.Adam(params, lr=1e-4)
 
-    # loss function
-    criterion = nn.CrossEntropyLoss().cuda()
-    # move the model to gpu
-    model = model.cuda()
-    return model, criterion, optimizer
+    loss = nn.CrossEntropyLoss().cuda()
+    model = model.cuda()  # move the model to gpu
+    return model, loss, optimizer
