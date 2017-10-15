@@ -11,7 +11,7 @@ def get_model():
     # create different parameter groups
     weights = [
         p for n, p in model.named_parameters()
-        if 'weight' in n and not 'bn' in n and not 'features.1.' in n
+        if 'weight' in n and 'bn' not in n and 'features.1.' not in n
     ]
     biases = [model.classifier[1].bias]
     bn_weights = [
@@ -22,7 +22,7 @@ def get_model():
         p for n, p in model.named_parameters()
         if ('bn' in n or 'features.1.' in n) and 'bias' in n
     ]
-    
+
     for p in bn_weights:
         constant(p, 1.0)
     for p in bn_biases:
@@ -36,8 +36,6 @@ def get_model():
     ]
     optimizer = optim.SGD(params, lr=4e-2, momentum=0.95, nesterov=True)
 
-    # loss function
-    criterion = nn.CrossEntropyLoss().cuda()
-    # move the model to gpu
-    model = model.cuda()
-    return model, criterion, optimizer
+    loss = nn.CrossEntropyLoss().cuda()
+    model = model.cuda()  # move the model to gpu
+    return model, loss, optimizer
