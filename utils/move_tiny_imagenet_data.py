@@ -5,6 +5,19 @@ from tqdm import tqdm
 import argparse
 
 
+"""The purpose of this script is to arrange tiny-imagenet data in the following way:
+data_dir/training/n03444034/image_name10.JPEG
+data_dir/training/n03444034/image_name13.JPEG
+data_dir/training/n03444034/image_name15.JPEG
+...
+data_dir/training/n04067472/image_name16.JPEG
+data_dir/training/n04067472/image_name123.JPEG
+data_dir/training/n04067472/image_name93.JPEG
+...
+And in the same way arrange validation data.
+"""
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--data_dir', type=str,
@@ -17,18 +30,6 @@ args = parser.parse_args()
 # a folder from tiny-imagenet-200.zip file
 data_dir = args.data_dir
 # inside there are folders 'train' and 'val'.
-
-"""The purpose of this script is to arrange tiny-imagenet data in the following way:
-data_dir/training/n03444034/image_name10.JPEG
-data_dir/training/n03444034/image_name13.JPEG
-data_dir/training/n03444034/image_name15.JPEG
-...
-data_dir/training/n04067472/image_name16.JPEG
-data_dir/training/n04067472/image_name123.JPEG
-data_dir/training/n04067472/image_name93.JPEG
-...
-And in the same way arrange validation data.
-"""
 
 
 # load validation metadata

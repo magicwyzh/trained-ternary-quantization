@@ -80,7 +80,7 @@ class DenseNet(nn.Module):
         # this is different from the original model, because
         # i removed pooling layer and changed the first conv layer.
         # in the original: kernel_size=7, stride=2, padding=3
-        
+
         # i use input images with size 56,
         # so after first layers spatial size will be also 56
 

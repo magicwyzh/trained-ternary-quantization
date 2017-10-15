@@ -10,7 +10,6 @@ import torch.nn.functional as F
 """Tools for diagnostic of a learned model.
 
 Arguments:
-
     true: a numpy array of shape (n_samples,) of type int
         with integers in range 0..(n_classes - 1).
 
@@ -19,6 +18,10 @@ Arguments:
 
     decode: a dict that maps a class index to a human readable form.
 """
+
+
+NUM_CLASSES = 200
+NUM_VAL_SAMPLES_PER_CLASS = 50  # number of samples per class in the validation dataset
 
 
 def top_k_accuracy(true, pred, k=[2, 3, 4, 5]):
@@ -31,16 +34,14 @@ def top_k_accuracy(true, pred, k=[2, 3, 4, 5]):
 
 def per_class_accuracy(true, pred):
 
-    # there are 200 classes
-    true_ohehot = np.zeros((len(true), 200))
+    true_ohehot = np.zeros((len(true), NUM_CLASSES))
     for i in range(len(true)):
         true_ohehot[i, true[i]] = 1.0
 
     pred_onehot = np.equal(pred, pred.max(1).reshape(-1, 1)).astype('int')
 
-    # 50 samples per class in the validation dataset
-    per_class_acc = (true_ohehot*pred_onehot).sum(0)/50.0
-    return per_class_acc
+    per_class_acc = (true_ohehot*pred_onehot).sum(0)/float(NUM_VAL_SAMPLES_PER_CLASS)
+    return per_class_acc  # shape: [NUM_CLASSES]
 
 
 def most_inaccurate_k_classes(per_class_acc, k, decode):

@@ -1,9 +1,6 @@
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
-import time
-import copy
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from .training import _accuracy
 
 
@@ -12,6 +9,10 @@ def initial_scales(kernel):
 
 
 def quantize(kernel, w_p, w_n, t):
+    """
+    Return quantized weights of a layer.
+    Only possible values of quantized weights are: {zero, w_p, -w_n}.
+    """
     delta = t*kernel.abs().max()
     a = (kernel > delta).float()
     b = (kernel < -delta).float()
@@ -19,6 +20,18 @@ def quantize(kernel, w_p, w_n, t):
 
 
 def get_grads(kernel_grad, kernel, w_p, w_n, t):
+    """
+    Arguments:
+        kernel_grad: gradient with respect to quantized kernel.
+        kernel: corresponding full precision kernel.
+        w_p, w_n: scaling factors.
+        t: hyperparameter for quantization.
+
+    Returns:
+        1. gradient for the full precision kernel.
+        2. gradient for w_p.
+        3. gradient for w_n.
+    """
     delta = t*kernel.abs().max()
     # masks
     a = (kernel > delta).float()
@@ -30,10 +43,11 @@ def get_grads(kernel_grad, kernel, w_p, w_n, t):
 
 
 def optimization_step(model, loss, x_batch, y_batch, optimizer_list, t):
+    """Make forward pass and update model parameters with gradients."""
 
     # parameter 't' is a hyperparameter for quantization
 
-    # there are optimizers for
+    # 'optimizer_list' contains optimizers for
     # 1. full model (all weights including quantized weights),
     # 2. backup of full precision weights,
     # 3. scaling factors for each layer
@@ -79,7 +93,7 @@ def optimization_step(model, loss, x_batch, y_batch, optimizer_list, t):
         w_p, w_n = f.data[0], f.data[1]
 
         # get modified grads
-        k_fp_grad, w_p_grad, w_n_grad = get_grads(k.grad.data, k.data, w_p, w_n, t)
+        k_fp_grad, w_p_grad, w_n_grad = get_grads(k.grad.data, k_fp.data, w_p, w_n, t)
 
         # grad for full precision kernel
         k_fp.grad = Variable(k_fp_grad)
@@ -100,7 +114,7 @@ def optimization_step(model, loss, x_batch, y_batch, optimizer_list, t):
     # update all scaling factors
     optimizer_sf.step()
 
-    # update all quantized kernels
+    # update all quantized kernels with updated full precision kernels
     for i in range(len(all_kernels)):
 
         k = all_kernels[i]

@@ -8,7 +8,26 @@ TRAIN_DIR = '/home/ubuntu/data/tiny-imagenet-200/training'
 VAL_DIR = '/home/ubuntu/data/tiny-imagenet-200/validation'
 
 
+"""It assumes that training image data is in the following form:
+TRAIN_DIR/class4/image44.jpg
+TRAIN_DIR/class4/image12.jpg
+...
+TRAIN_DIR/class55/image33.jpg
+TRAIN_DIR/class55/image543.jpg
+...
+TRAIN_DIR/class1/image6.jpg
+TRAIN_DIR/class1/image99.jpg
+...
+
+And the same for validation data.
+"""
+
+
 def get_image_folders():
+    """
+    Build an input pipeline for training and evaluation.
+    For training data it does data augmentation.
+    """
 
     enhancers = {
         0: lambda image, f: ImageEnhance.Color(image).enhance(f),
@@ -17,6 +36,7 @@ def get_image_folders():
         3: lambda image, f: ImageEnhance.Sharpness(image).enhance(f)
     }
 
+    # intensities of enhancers
     factors = {
         0: lambda: np.clip(np.random.normal(1.0, 0.3), 0.4, 1.6),
         1: lambda: np.clip(np.random.normal(1.0, 0.15), 0.7, 1.3),
@@ -24,7 +44,7 @@ def get_image_folders():
         3: lambda: np.clip(np.random.normal(1.0, 0.3), 0.4, 1.6),
     }
 
-    # change color of an image
+    # randomly change color of an image
     def enhance(image):
         order = [0, 1, 2, 3]
         np.random.shuffle(order)

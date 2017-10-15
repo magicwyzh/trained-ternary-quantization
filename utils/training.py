@@ -5,6 +5,7 @@ import time
 
 
 def optimization_step(model, loss, x_batch, y_batch, optimizer):
+    """Make forward pass and update model parameters with gradients."""
 
     # forward pass
     x_batch, y_batch = Variable(x_batch.cuda()), Variable(y_batch.cuda(async=True))
@@ -32,6 +33,10 @@ def train(model, loss, optimization_step_fn,
           train_iterator, val_iterator,
           n_epochs=30, steps_per_epoch=500, n_validation_batches=50,
           patience=10, threshold=0.01, lr_scheduler=None):
+    """
+    Train 'model' by minimizing 'loss' using 'optimization_step_fn'
+    for parameter updates.
+    """
 
     # collect losses and accuracies here
     all_losses = []
@@ -80,7 +85,7 @@ def train(model, loss, optimization_step_fn,
             break
 
         if lr_scheduler is not None:
-            # change learning rate
+            # possibly change the learning rate
             if not is_reduce_on_plateau:
                 lr_scheduler.step()
             else:
@@ -95,7 +100,6 @@ def train(model, loss, optimization_step_fn,
     return all_losses
 
 
-# compute accuracy
 def _accuracy(true, pred, top_k=(1,)):
 
     max_k = max(top_k)
@@ -145,8 +149,8 @@ def _evaluate(model, loss, val_iterator, n_validation_batches):
     return loss_value/total_samples, accuracy/total_samples, top5_accuracy/total_samples
 
 
-# it decides if training must stop
 def _is_early_stopping(all_losses, patience, threshold):
+    """It decides if training must stop."""
 
     # get current and all past (validation) accuracies
     accuracies = [x[4] for x in all_losses]
