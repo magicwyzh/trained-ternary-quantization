@@ -30,8 +30,7 @@ def optimization_step(model, loss, x_batch, y_batch, optimizer):
 
 
 def train(model, loss, optimization_step_fn,
-          train_iterator, val_iterator,
-          n_epochs=30, steps_per_epoch=500, n_validation_batches=50,
+          train_iterator, val_iterator, n_epochs=30,
           patience=10, threshold=0.01, lr_scheduler=None):
     """
     Train 'model' by minimizing 'loss' using 'optimization_step_fn'
@@ -46,13 +45,14 @@ def train(model, loss, optimization_step_fn,
     running_loss = 0.0
     running_accuracy = 0.0
     running_top5_accuracy = 0.0
+    n_steps = 0
     start_time = time.time()
     model.train()
 
     for epoch in range(0, n_epochs):
 
         # main training loop
-        for step, (x_batch, y_batch) in enumerate(train_iterator, 1 + epoch*steps_per_epoch):
+        for x_batch, y_batch in train_iterator:
 
             batch_loss, batch_accuracy, batch_top5_accuracy = optimization_step_fn(
                 model, loss, x_batch, y_batch
@@ -60,19 +60,20 @@ def train(model, loss, optimization_step_fn,
             running_loss += batch_loss
             running_accuracy += batch_accuracy
             running_top5_accuracy += batch_top5_accuracy
+            n_steps += 1
 
         # evaluation
         model.eval()
         test_loss, test_accuracy, test_top5_accuracy = _evaluate(
-            model, loss, val_iterator, n_validation_batches
+            model, loss, val_iterator
         )
 
         # collect evaluation information and print it
         all_losses += [(
             epoch,
-            running_loss/steps_per_epoch, test_loss,
-            running_accuracy/steps_per_epoch, test_accuracy,
-            running_top5_accuracy/steps_per_epoch, test_top5_accuracy
+            running_loss/n_steps, test_loss,
+            running_accuracy/n_steps, test_accuracy,
+            running_top5_accuracy/n_steps, test_top5_accuracy
         )]
         print('{0}  {1:.3f} {2:.3f}  {3:.3f} {4:.3f}  {5:.3f} {6:.3f}  {7:.3f}'.format(
             *all_losses[-1], time.time() - start_time
@@ -94,6 +95,7 @@ def train(model, loss, optimization_step_fn,
         running_loss = 0.0
         running_accuracy = 0.0
         running_top5_accuracy = 0.0
+        n_steps = 0
         start_time = time.time()
         model.train()
 
@@ -117,14 +119,14 @@ def _accuracy(true, pred, top_k=(1,)):
     return result
 
 
-def _evaluate(model, loss, val_iterator, n_validation_batches):
+def _evaluate(model, loss, val_iterator):
 
     loss_value = 0.0
     accuracy = 0.0
     top5_accuracy = 0.0
     total_samples = 0
 
-    for j, (x_batch, y_batch) in enumerate(val_iterator):
+    for x_batch, y_batch in val_iterator:
 
         x_batch = Variable(x_batch.cuda(), volatile=True)
         y_batch = Variable(y_batch.cuda(async=True), volatile=True)
@@ -142,9 +144,6 @@ def _evaluate(model, loss, val_iterator, n_validation_batches):
         accuracy += batch_accuracy*n_batch_samples
         top5_accuracy += batch_top5_accuracy*n_batch_samples
         total_samples += n_batch_samples
-
-        if j >= n_validation_batches:
-            break
 
     return loss_value/total_samples, accuracy/total_samples, top5_accuracy/total_samples
 
