@@ -40,7 +40,8 @@ Or you can skip this step and use `model.pytorch_state` (the model already train
 5. Run `train.ipynb` to do TTQ.
 6. Run `test_and_explore.ipynb` to explore the quantized model.
 
-To use this on your data you need to edit `input_pipeline.py` and to change the model architecture in `ttq_densenet_small/densenet.py` and `ttq_densenet_small/get_densenet.py` as you like.
+To use this on your data you need to edit `utils/input_pipeline.py` and to change
+the model architecture in files like `densenet.py` and `get_densenet.py` as you like.
 
 ## Requirements
 * pytorch 0.2, Pilllow, torchvision
