@@ -3,16 +3,17 @@
 
 The quantization roughly proceeds as follows.
 1. Train a model of your choice as usual (or take a trained model).
-2. Copy all full precision weights that you want to quantize.
-3. Do the initial quantization: in the model replace them by ternary values {-1, 0, +1} using some heuristic.
-4. Repeat until convergence:
-  * Make the forward pass with the quantized model.
-  * Compute gradients for the quantized model.
-  * Preprocess the gradients and apply them to the copy of full precision weights.
-  * Requantize the model using the changed full precision weights.
-5. Throw away the copy of full precision weights and use the quantized model.
+2. Copy all full precision weights that you want to quantize. Then do the initial quantization:  
+in the model replace them by ternary values {-1, 0, +1} using some heuristic.
+3. Repeat until convergence:
+   * Make the forward pass with the quantized model.
+   * Compute gradients for the quantized model.
+   * Preprocess the gradients and apply them to the copy of full precision weights.
+   * Requantize the model using the changed full precision weights.
+4. Throw away the copy of full precision weights and use the quantized model.
 
 ## Results
+I believe that this results can be made better by spending more time on hyperparameter optimization.
 
 | model | accuracy, % | top5 accuracy, % | number of parameters |
 | --- | --- | --- | --- |
@@ -22,8 +23,6 @@ The quantization roughly proceeds as follows.
 | TTQ small DenseNet | 37 | 65 | ~0.4M 2-bit, 65% are zeros |
 | SqueezeNet | 52 | 77 | 827784 |
 | TTQ SqueezeNet | 36 | 63 | ~0.8M 2-bit, 66% are zeros |
-
-I believe that this results can be made better by spending more time on hyperparameter optimization.
 
 ## Implementation details
 * I use pretrained DenseNet-121, but I train SqueezeNet and small DenseNet from scratch.
@@ -35,7 +34,8 @@ I believe that this results can be made better by spending more time on hyperpar
 
 1. Download [Tiny ImageNet](https://tiny-imagenet.herokuapp.com/) dataset and extract it to `~/data` folder.
 2. Run `python utils/move_tiny_imagenet_data.py` to prepare the data.
-3. Go to `vanilla_densenet_small/`. Run `train.ipynb` to train the model as usual. Or you can skip this step and use `model.pytorch_state` (the model already trained by me).
+3. Go to `vanilla_densenet_small/`. Run `train.ipynb` to train the model as usual. 
+Or you can skip this step and use `model.pytorch_state` (the model already trained by me).
 4. Go to `ttq_densenet_small/`.
 5. Run `train.ipynb` to do TTQ.
 6. Run `test_and_explore.ipynb` to explore the quantized model.
