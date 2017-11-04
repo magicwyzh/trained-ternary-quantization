@@ -13,7 +13,7 @@ To resize filters I treated them like small 7x7 images and then used `PIL.Image.
 
 | step | layers | optimizer | epochs | time, in hours | accuracy, % |
 | --- | --- | --- | --- | --- | --- |
-| 1 | only the last fc layer | Adam, lr=1e-3 | 5 | 1 | 45 |
+| 1 | only the last FC layer | Adam, lr=1e-3 | 5 | 1 | 45 |
 | 2 | the whole network | SGD with nesterov=0.9, lr=1e-5 | 5 | 3 | 65 |
 | 3 | the whole network | lr=1e-4 | 5 | 3 | 71 |
 | 4 | the whole network | lr=1e-4 | 5 | 3 | 72.8 |
