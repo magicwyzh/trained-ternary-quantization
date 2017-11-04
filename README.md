@@ -31,10 +31,10 @@ I believe that this results can be made better by spending more time on hyperpar
 
 
 ## How to reproduce results
-
+For example, for small DenseNet:
 1. Download [Tiny ImageNet](https://tiny-imagenet.herokuapp.com/) dataset and extract it to `~/data` folder.
 2. Run `python utils/move_tiny_imagenet_data.py` to prepare the data.
-3. Go to `vanilla_densenet_small/`. Run `train.ipynb` to train the model as usual. 
+3. Go to `vanilla_densenet_small/`. Run `train.ipynb` to train the model as usual.  
 Or you can skip this step and use `model.pytorch_state` (the model already trained by me).
 4. Go to `ttq_densenet_small/`.
 5. Run `train.ipynb` to do TTQ.
